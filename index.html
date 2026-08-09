@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>For Liyaa ❤️</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #12052d;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      touch-action: pan-y;
+    }
+
+    /* Main website */
+    #app {
+      width: 100%;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Each birthday screen */
+    .screen {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(1.03);
+
+      transition:
+        opacity 0.8s ease,
+        transform 0.8s ease,
+        visibility 0.8s;
+    }
+
+    .screen.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1);
+      z-index: 10;
+    }
+
+    /*
+      The screenshots are portrait designs.
+      This keeps them looking correct on phones.
+    */
+    .screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+
+    /* Invisible clickable area */
+    .tap-area {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      cursor: pointer;
+    }
+
+    /* Top menu button */
+    .menu-button {
+      position: absolute;
+      top: 24px;
+      right: 22px;
+      width: 44px;
+      height: 44px;
+      z-index: 50;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+
+      cursor: pointer;
+    }
+
+    .menu-button span {
+      width: 28px;
+      height: 3px;
+      border-radius: 5px;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    }
+
+    /* Menu overlay */
+    #menu {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+
+      background: rgba(10, 5, 30, 0.94);
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      opacity: 0;
+      visibility: hidden;
+      transition: .3s ease;
+    }
+
+    #menu.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .menu-box {
+      width: 82%;
+      max-width: 360px;
+      padding: 30px 20px;
+      border-radius: 25px;
+
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.3);
+      backdrop-filter: blur(12px);
+
+      text-align: center;
+    }
+
+    .menu-title {
+      color: white;
+      font-size: 25px;
+      margin-bottom: 20px;
+    }
+
+    .menu-item {
+      width: 100%;
+      padding: 13px;
+      margin: 8px 0;
+
+      border: 0;
+      border-radius: 30px;
+
+      background: linear-gradient(90deg,#ff70ae,#c96bea);
+      color: white;
+
+      font-size: 16px;
+      font-weight: bold;
+
+      cursor: pointer;
+    }
+
+    .close-menu {
+      margin-top: 15px;
+      color: white;
+      font-size: 14px;
+      opacity: .8;
+      cursor: pointer;
+    }
+
+    /* Countdown overlay */
+    #countdown {
+      position: absolute;
+      z-index: 40;
+
+      left: 50%;
+      top: 49%;
+
+      transform: translate(-50%, -50%) scale(.7);
+
+      width: 105px;
+      height: 105px;
+
+      border-radius: 50%;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      font-size: 58px;
+      font-weight: bold;
+      color: white;
+
+      background: rgba(241, 92, 161, .9);
+
+      box-shadow:
+        0 0 20px rgba(255,105,180,.7),
+        0 0 45px rgba(255,105,180,.4);
+
+      opacity: 0;
+      pointer-events: none;
+
+      transition: .4s ease;
+    }
+
+    #countdown.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* Navigation dots */
+    #dots {
+      position: absolute;
+      z-index: 80;
+
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+
+      display: flex;
+      gap: 7px;
+
+      padding: 8px 12px;
+      border-radius: 20px;
+
+      background: rgba(0,0,0,.18);
+      backdrop-filter: blur(5px);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.5);
+      transition: .3s ease;
+    }
+
+    .dot.active {
+      width: 22px;
+      border-radius: 10px;
+      background: #ff6da9;
+    }
+
+    /* Previous/next hints */
+    .navigation {
+      position: absolute;
+      z-index: 30;
+      bottom: 45px;
+      left: 50%;
+      transform: translateX(-50%);
+
+      color: rgba(255,255,255,.9);
+      font-size: 12px;
+      text-align: center;
+
+      opacity: .75;
+      pointer-events: none;
+    }
+
+    /* Small loading screen */
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+
+      background: #170735;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      transition: opacity .6s ease;
+    }
+
+    #loader.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loader-heart {
+      font-size: 60px;
+      animation: heartbeat 1s infinite;
+    }
+
+    @keyframes heartbeat {
+      0%,100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.25);
+      }
+    }
+
+    /* Prevent desktop stretching */
+    @media (min-width: 700px) {
+      .screen {
+        width: min(100vw, 480px);
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%) scale(1.03);
+      }
+
+      .screen.active {
+        transform: translateX(-50%) scale(1);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Loading -->
+  <div id="loader">
+    <div class="loader-heart">❤️</div>
+  </div>
+
+  <div id="app">
+
+    <!-- SCREEN 1 -->
+    <section class="screen active" data-screen="1">
+      <img src="screen1.png" alt="For Liyaa">
+      <div class="tap-area" onclick="nextScreen()"></div>
+    </section>
+
+    <!-- SCREEN 2 -->
+    <section class="screen" data-screen="2">
+      <img src="screen2.png" alt="Birthday countdown">
+
+      <!-- Animated countdown -->
+      <div id="countdown">3</div>
+
+      <div class="tap-area" onclick="nextScreen()"></div>
+    </section>
+
+    <!-- SCREEN 3 -->
+    <section class="screen" data-screen="3">
+      <img src="screen3.png" alt="Happy Birthday Liyaa">
+      <div class="tap-area" onclick="nextScreen()"></div>
+    </section>
+
+    <!-- SCREEN 4 -->
+    <section class="screen" data-screen="4">
+      <img src="screen4.png" alt="Memories for Liyaa">
+      <div class="tap-area" onclick="nextScreen()"></div>
+    </section>
+
+    <!-- SCREEN 5 -->
+    <section class="screen" data-screen="5">
+      <img src="screen5.png" alt="A little message for Liyaa">
+      <div class="tap-area" onclick="nextScreen()"></div>
+    </section>
+
+    <!-- SCREEN 6 -->
+    <section class="screen" data-screen="6">
+      <img src="screen6.png" alt="Our friendship">
+      <div class="tap-area" onclick="restartOrFinish()"></div>
+    </section>
+
+
+    <!-- MENU BUTTON -->
+    <div class="menu-button" onclick="toggleMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+
+
+    <!-- MENU -->
+    <div id="menu">
+
+      <div class="menu-box">
+
+        <div class="menu-title">
+          For Liyaa ❤️
+        </div>
+
+        <button class="menu-item" onclick="goToScreen(1)">
+          💗 Start
+        </button>
+
+        <button class="menu-item" onclick="goToScreen(2)">
+          🎂 Birthday
+        </button>
+
+        <button class="menu-item" onclick="goToScreen(3)">
+          💙 Birthday Wish
+        </button>
+
+        <button class="menu-item" onclick="goToScreen(4)">
+          📸 Memories
+        </button>
+
+        <button class="menu-item" onclick="goToScreen(5)">
+          💌 Message
+        </button>
+
+        <button class="menu-item" onclick="goToScreen(6)">
+          🌿 One More Thing
+        </button>
+
+        <div class="close-menu" onclick="toggleMenu()">
+          Close
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- DOTS -->
+    <div id="dots">
+
+      <div class="dot active"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+
+    </div>
+
+  </div>
+
+
+  <script>
+
+    let currentScreen = 1;
+    const totalScreens = 6;
+
+    let countdownTimer = null;
+
+    const screens = document.querySelectorAll(".screen");
+    const dots = document.querySelectorAll(".dot");
+    const countdown = document.getElementById("countdown");
+    const menu = document.getElementById("menu");
+
+
+    /* =========================
+       CHANGE SCREEN
+    ========================= */
+
+    function goToScreen(number) {
+
+      if (number < 1) number = 1;
+      if (number > totalScreens) number = totalScreens;
+
+      currentScreen = number;
+
+      screens.forEach((screen, index) => {
+
+        if (index + 1 === currentScreen) {
+          screen.classList.add("active");
+        } else {
+          screen.classList.remove("active");
+        }
+
+      });
+
+
+      dots.forEach((dot, index) => {
+
+        if (index + 1 === currentScreen) {
+          dot.classList.add("active");
+        } else {
+          dot.classList.remove("active");
+        }
+
+      });
+
+
+      /*
+        When screen 2 opens,
+        start the 3 → 2 → 1 countdown.
+      */
+
+      if (currentScreen === 2) {
+        startCountdown();
+      } else {
+        stopCountdown();
+      }
+
+    }
+
+
+    /* =========================
+       NEXT SCREEN
+    ========================= */
+
+    function nextScreen() {
+
+      if (currentScreen < totalScreens) {
+
+        goToScreen(currentScreen + 1);
+
+      } else {
+
+        restartOrFinish();
+
+      }
+
+    }
+
+
+    /* =========================
+       LAST SCREEN
+    ========================= */
+
+    function restartOrFinish() {
+
+      /*
+        After reaching the last screen,
+        tapping again takes her back
+        to the beginning.
+      */
+
+      goToScreen(1);
+
+    }
+
+
+    /* =========================
+       COUNTDOWN
+    ========================= */
+
+    function startCountdown() {
+
+      stopCountdown();
+
+      let number = 3;
+
+      countdown.innerText = number;
+      countdown.classList.add("show");
+
+      countdownTimer = setInterval(() => {
+
+        number--;
+
+        if (number > 0) {
+
+          countdown.innerText = number;
+
+          countdown.classList.remove("show");
+
+          setTimeout(() => {
+            countdown.classList.add("show");
+          }, 50);
+
+        } else {
+
+          stopCountdown();
+
+        }
+
+      }, 1000);
+
+    }
+
+
+    function stopCountdown() {
+
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
+
+      countdown.classList.remove("show");
+
+    }
+
+
+    /* =========================
+       MENU
+    ========================= */
+
+    function toggleMenu() {
+
+      menu.classList.toggle("open");
+
+    }
+
+
+    /* Close menu after choosing screen */
+
+    const menuButtons = document.querySelectorAll(".menu-item");
+
+    menuButtons.forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        menu.classList.remove("open");
+
+      });
+
+    });
+
+
+    /* =========================
+       SWIPE SUPPORT
+    ========================= */
+
+    let touchStartY = 0;
+    let touchEndY = 0;
+
+    document.addEventListener("touchstart", function(event) {
+
+      touchStartY = event.changedTouches[0].screenY;
+
+    }, { passive: true });
+
+
+    document.addEventListener("touchend", function(event) {
+
+      touchEndY = event.changedTouches[0].screenY;
+
+      handleSwipe();
+
+    }, { passive: true });
+
+
+    function handleSwipe() {
+
+      const difference = touchStartY - touchEndY;
+
+      /*
+        Swipe up = next screen
+        Swipe down = previous screen
+      */
+
+      if (Math.abs(difference) < 50) {
+        return;
+      }
+
+      if (difference > 0) {
+
+        if (currentScreen < totalScreens) {
+          nextScreen();
+        }
+
+      } else {
+
+        if (currentScreen > 1) {
+          goToScreen(currentScreen - 1);
+        }
+
+      }
+
+    }
+
+
+    /* =========================
+       KEYBOARD SUPPORT
+    ========================= */
+
+    document.addEventListener("keydown", function(event) {
+
+      if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+
+        nextScreen();
+
+      }
+
+      if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+
+        if (currentScreen > 1) {
+          goToScreen(currentScreen - 1);
+        }
+
+      }
+
+      if (event.key === "Escape") {
+
+        menu.classList.remove("open");
+
+      }
+
+    });
+
+
+    /* =========================
+       LOADING
+    ========================= */
+
+    window.addEventListener("load", function() {
+
+      setTimeout(() => {
+
+        document.getElementById("loader").classList.add("hide");
+
+      }, 700);
+
+    });
+
+  </script>
+
+</body>
+  </html>
